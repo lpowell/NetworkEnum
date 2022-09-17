@@ -21,16 +21,16 @@ function Gather{
         $Adapter = Get-CimInstance Win32_NetworkAdapterConfiguration
     }
     foreach($x in $Adapter){
-        Write-Host "<-----$x----->" -ForegroundColor $GoodColor
-        ft -InputObject $x -Property Description, IPAddress, IPSubnet, DefaultIPGateway, DNSHostName, DNSServerSearchOrder
-        Write-Host "<-----Connections----->"
+        echo "<-----$x----->"
+        ft -InputObject $x -Property Description, IPAddress, IPSubnet, DefaultIPGateway, DNSHostName, DNSServerSearchOrder -AutoSize
+        echo "<-----Connections----->"
         try{
             $Connections = Get-NetTCPConnection -LocalAddress $x.IPAddress[0]
-            ft -InputObject $Connections -Property LocalAddress, LocalPort, RemoteAddress, RemotePort
+            ft -InputObject $Connections -Property LocalAddress, LocalPort, RemoteAddress, RemotePort -AutoSize
             if($Verbose){
                 try{
                     $DNSList=@()
-                    Write-Host "<-----Resolving DNS Names----->"
+                    echo "<-----Resolving DNS Names----->"
                     foreach($x in $connections){
                         $IsDNS = Resolve-DNSName $x.RemoteAddress
                         if($IsDNS){
@@ -43,7 +43,7 @@ function Gather{
                 }
                 try{
                     $TestPort =@()
-                    Write-Host "<-----Testing Connections----->"
+                    echo "<-----Testing Connections----->"
                     foreach($x in $connections){
                         $strx = (Out-String -InputObject $x.RemoteAddress).Trim()
                         $TestPort += Get-CimInstance Win32_PingStatus -filter "Address='$strx' AND Timeout=1000"
@@ -54,7 +54,7 @@ function Gather{
                     }
             }
             }catch{
-                Write-Host "No connections on $x"
+                echo "No connections on $x"
                 Write-Host
             }
     }
