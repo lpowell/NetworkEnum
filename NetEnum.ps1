@@ -2,7 +2,7 @@
 # Liam Powell
 
 
-Param($Interface, $Conn, [switch]$Help, [switch]$Verbose, [switch]$Colorblind)
+Param($Interface, $Conn, [switch]$Help, [switch]$Verbose, [switch]$Colorblind, $Out)
 
 function GlobalSettings{
     $global:ErrorActionPreference="SilentlyContinue"
@@ -22,34 +22,71 @@ function Gather{
         $Adapter = Get-CimInstance Win32_NetworkAdapterConfiguration
     }
     foreach($x in $Adapter){
-        echo "<-----$x----->"
-        ft -InputObject $x -Property Description, IPAddress, IPSubnet, DefaultIPGateway, DNSHostName, DNSServerSearchOrder -AutoSize
-        echo "<-----Connections----->"
+        if($Out){
+            Write-Host "Writing to $out..." -ForegroundColor $GoodColor
+            echo "<-----$x----->" >> $Out
+        }else{
+            Write-Host "<-----$x----->" -ForegroundColor $GoodColor
+        }
+        if($Out){
+            ft -InputObject $x -Property Description, IPAddress, IPSubnet, DefaultIPGateway, DNSHostName, DNSServerSearchOrder -AutoSize >> $Out
+            }else{
+                ft -InputObject $x -Property Description, IPAddress, IPSubnet, DefaultIPGateway, DNSHostName, DNSServerSearchOrder -AutoSize
+            }
+        if($Out){
+            Write-Host "Writing Connections"
+            echo "<-----Connections----->" >> $Out
+        }else{
+            Write-Host "<-----Connections----->"
+        }
         try{
             $Connections = Get-NetTCPConnection -LocalAddress $x.IPAddress[0]
-            ft -InputObject $Connections -Property LocalAddress, LocalPort, RemoteAddress, RemotePort -AutoSize
+            if($Out){
+                ft -InputObject $Connections -Property LocalAddress, LocalPort, RemoteAddress, RemotePort -AutoSize >> $Out
+                }else{
+                    ft -InputObject $Connections -Property LocalAddress, LocalPort, RemoteAddress, RemotePort -AutoSize
+                }
             if($Verbose){
                 try{
                     $DNSList=@()
-                    echo "<-----Resolving DNS Names----->"
+                    if($Out){
+                        Write-Host "Writing DNS Names"
+                        echo " <-----Resolving DNS Names----->" >> $Out
+                    }else{
+                        Write-Host "<-----Resolving DNS Names----->"
+                    }
                     foreach($x in $connections){
                         $IsDNS = Resolve-DNSName $x.RemoteAddress
                         if($IsDNS){
                             $DNSList += $IsDNS
                         }
                     }
-                    ft -InputObject $DNSList -Property Name, Server, Type
+                    if($Out){
+                        ft -InputObject $DNSList -Property Name, Server, Type >> $Out
+                        }else{
+                            ft -InputObject $DNSList -Property Name, Server, Type
+                        }
                 }catch{
 
                 }
                 try{
                     $TestPort =@()
-                    echo "<-----Testing Connections----->"
+                    if($Out){
+                        Write-Host "Writing Connection Test"
+                        echo "<-----Testing Connections----->" >> $Out
+                    }else{
+                        Write-Host "<-----Testing Connections----->"
+                    }
                     foreach($x in $connections){
                         $strx = (Out-String -InputObject $x.RemoteAddress).Trim()
                         $TestPort += Get-CimInstance Win32_PingStatus -filter "Address='$strx' AND Timeout=1000"
                     }
-                    ft -InputObject $TestPort -Property Address, IPV4Address, IPV6Address, ResponseTime, StatusCode -AutoSize
+                    if($Out){
+                        ft -InputObject $TestPort -Property Address, IPV4Address, IPV6Address, ResponseTime, StatusCode -AutoSize >> $Out
+                        Write-Host "Report generated!"
+                        }else{
+                            ft -InputObject $TestPort -Property Address, IPV4Address, IPV6Address, ResponseTime, StatusCode -AutoSize
+                        }
                     }catch{
 
                     }
