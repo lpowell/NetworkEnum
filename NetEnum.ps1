@@ -17,9 +17,9 @@ function GlobalSettings{
 function Gather{
 
     if($Interface){
-        $Adapter = Get-CimInstance Win32_NetworkAdapterConfiguration | ? Description -match $Interface
+        $Adapter = Get-CimInstance Win32_NetworkAdapterConfiguration | ? Description -match $Interface 
     }else{
-        $Adapter = Get-CimInstance Win32_NetworkAdapterConfiguration
+        $Adapter = Get-CimInstance Win32_NetworkAdapterConfiguration 
     }
     foreach($x in $Adapter){
         if($Out){
@@ -105,6 +105,8 @@ if($help){
     Write-Host "Network Enumeration Tool"
     Write-Host "Use -Verbose to get DNS Resolution and connection testing"
     Write-Host "Use -Interface to specify a specific interface"
+    Write-Host "Use -Out to direct information to a specified file"
+    Write-Host "Use -Colorblind to display output in a more friendly color"
     exit
 }
 GlobalSettings
